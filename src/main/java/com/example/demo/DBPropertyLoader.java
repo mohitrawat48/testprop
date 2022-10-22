@@ -1,6 +1,7 @@
 package com.example.demo;
 
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -13,10 +14,16 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Component
+@Slf4j
 public class DBPropertyLoader implements ApplicationContextInitializer<ConfigurableApplicationContext> {
 
     private static final String PROPERTY_SOURCE_NAME = "databaseProperties";
@@ -43,7 +50,9 @@ public class DBPropertyLoader implements ApplicationContextInitializer<Configura
     }
 
     private Map<String, Object> getPropertyMapFromDatabase(Map<?, ?> appConfigProp) {
+
         Map<String, Object> propertySource = new HashMap<>();
+        Map<String, String> allDBProperties = new HashMap<>();
 
         final String url =  appConfigProp.get("spring.datasource.url").toString();
         final String driverClassName = appConfigProp.get("spring.datasource.driverClassName").toString();
@@ -71,8 +80,21 @@ public class DBPropertyLoader implements ApplicationContextInitializer<Configura
             while (rs.next()) {
                 final String propName = rs.getString("prop_key");
                 final String propValue = rs.getString("prop_value");
-                propertySource.put(propName, propValue);
+                allDBProperties.put(propName, propValue);
             }
+
+            for(Map.Entry<?, ?> entry : appConfigProp.entrySet()){
+                String value = entry.getValue().toString();
+                Pattern pattern = Pattern.compile("(?<=\\$\\{).*?(?=\\})");
+                Matcher matcher = pattern.matcher(value);
+
+                if(matcher.find()) {
+                    String key = matcher.group();
+                    String val = allDBProperties.containsKey(key) ? allDBProperties.get(key): "";
+                    propertySource.put(key,val);
+                }
+            }
+
         } catch (Exception e) {
             throw new RuntimeException(e.getMessage(), e);
         } finally {

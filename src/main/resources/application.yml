@@ -13,3 +13,6 @@ spring:
             enabled: true
 
 customQuery: select * from MyProperties
+
+user : ${userdb}
+password : ${passworddb}

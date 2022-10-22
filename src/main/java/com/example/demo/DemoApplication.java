@@ -1,10 +1,7 @@
 package com.example.demo;
 
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.cloud.config.server.EnableConfigServer;
-import org.springframework.context.ConfigurableApplicationContext;
 
 //@EnableConfigServer
 @SpringBootApplication
@@ -38,13 +35,13 @@ http://localhost:8080/h2-console
     );
 
     INSERT INTO MyProperties( prop_key, prop_value)
-    values('user', 'testuser');
+    values('userdb', 'testuser');
     INSERT INTO MyProperties( prop_key, prop_value)
-    values('password', 'testpassword');
+    values('passworddb', 'testpassword');
     INSERT INTO MyProperties( prop_key, prop_value)
-    values('host', 'spring.io');
+    values('hostdb', 'spring.io');
     INSERT INTO MyProperties( prop_key, prop_value)
-    values('port', '83');
+    values('portdb', '83');
 
 	Select * from MyProperties
 
