@@ -1,4 +1,6 @@
 spring:
+    profiles:
+        active: prod
     application:
         name: foo
     datasource:
@@ -12,7 +14,4 @@ spring:
         console:
             enabled: true
 
-customQuery: select * from MyProperties
-
-user : ${userdb}
-password : ${passworddb}
+customQuery: select prop_key, prop_value from MyProperties where profile = ?

@@ -59,6 +59,7 @@ public class DBPropertyLoader implements ApplicationContextInitializer<Configura
         final String username = appConfigProp.get("spring.datasource.username").toString();
         final String password = appConfigProp.get("spring.datasource.password").toString();
         final String query = appConfigProp.get("customQuery").toString();
+        final String profile = appConfigProp.get("spring.profiles.active").toString();
 
         // Now check for database properties
         DataSource ds = null;
@@ -75,6 +76,7 @@ public class DBPropertyLoader implements ApplicationContextInitializer<Configura
 
             connection = ds.getConnection();
             preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, profile);
             rs = preparedStatement.executeQuery();
             // Populate all properties into the property source
             while (rs.next()) {

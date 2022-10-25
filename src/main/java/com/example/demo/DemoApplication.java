@@ -13,7 +13,6 @@ public class DemoApplication {
 				.initializers(new DBPropertyLoader())
 				.run(args);
 	}
-
 }
 
 /*
@@ -31,17 +30,27 @@ http://localhost:8080/h2-console
 
     CREATE TABLE MyProperties (
     prop_key VARCHAR(200) NOT NULL,
-    prop_value VARCHAR(200) NOT NULL
+    prop_value VARCHAR(200) NOT NULL,
+    profile VARCHAR(200) NOT NULL
     );
 
-    INSERT INTO MyProperties( prop_key, prop_value)
-    values('userdb', 'testuser');
-    INSERT INTO MyProperties( prop_key, prop_value)
-    values('passworddb', 'testpassword');
-    INSERT INTO MyProperties( prop_key, prop_value)
-    values('hostdb', 'spring.io');
-    INSERT INTO MyProperties( prop_key, prop_value)
-    values('portdb', '83');
+    INSERT INTO MyProperties( prop_key, prop_value, profile)
+    values('dbuser', 'devuser', 'dev');
+    INSERT INTO MyProperties( prop_key, prop_value, profile)
+    values('dbpassword', 'devpassword', 'dev');
+    INSERT INTO MyProperties( prop_key, prop_value, profile)
+    values('hostdb', 'dev-spring.io', 'dev');
+    INSERT INTO MyProperties( prop_key, prop_value, profile)
+    values('portdb', 'dev-83', 'dev');
+
+    INSERT INTO MyProperties( prop_key, prop_value, profile)
+    values('dbuser', 'produser', 'prod');
+    INSERT INTO MyProperties( prop_key, prop_value, profile)
+    values('dbpassword', 'prodpassword', 'prod');
+    INSERT INTO MyProperties( prop_key, prop_value, profile)
+    values('hostdb', 'prod-spring.io', 'prod');
+    INSERT INTO MyProperties( prop_key, prop_value, profile)
+    values('portdb', 'prod-83', 'prod');
 
 	Select * from MyProperties
 

@@ -12,10 +12,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TestController {
 
-    @Value("${user}")
+    @Value("${myuser}")
     private String user;
 
-    @Value("${password}")
+    @Value("${mypassword}")
     private String password;
 
     @GetMapping("/getprop")

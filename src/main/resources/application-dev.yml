@@ -1,0 +1,2 @@
+myuser : ${dbuser}
+mypassword : ${dbpassword}
