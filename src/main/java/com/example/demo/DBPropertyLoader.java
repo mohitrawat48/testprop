@@ -14,10 +14,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -36,30 +33,49 @@ public class DBPropertyLoader implements ApplicationContextInitializer<Configura
         List<Object> allPropertySources = configEnv.getPropertySources().stream()
                 .map(PropertySource::getSource).collect(Collectors.toList());
 
-        List<Map<?, ?>> unmodifiableMaps = allPropertySources.stream()
+        List<Map<?, ?>> allMapSources = allPropertySources.stream()
+                .filter(obj -> Map.class.isAssignableFrom(obj.getClass()))
+                .map(object -> (Map<?, ?>) object)
+                .collect(Collectors.toList());
+
+        String profile = (String) allMapSources.stream()
+                .flatMap(map -> map.entrySet().stream())
+                .filter(entry -> entry.getKey().equals("spring.profiles.active"))
+                .map(entry -> entry.getValue().toString())
+                .findFirst().orElse("");
+
+        List<Map<?, ?>> yamlSources = allPropertySources.stream()
                 .filter(object -> object.getClass().equals(Collections.unmodifiableMap(Collections.emptyMap()).getClass()))
                 .map(object -> (Map<?, ?>) object)
                 .collect(Collectors.toList());
 
-        Map<?, ?> propertyMap = unmodifiableMaps.stream()
+        List<Map.Entry<?, ?>> yamlEntries = yamlSources.stream()
                 .flatMap(map -> map.entrySet().stream())
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                .collect(Collectors.toList());
 
-        Map<String, Object> propertySource = getPropertyMapFromDatabase(propertyMap);
+        Map<String, String> yamlProperties = new HashMap<String, String>();
+        for (Map.Entry<?, ?> entry : yamlEntries) {
+            String key = entry.getKey().toString();
+            String val = entry.getValue().toString();
+
+            if (!yamlProperties.containsKey(key))
+                yamlProperties.put(key, val);
+        }
+
+        Map<String, Object> propertySource = getPropertyMapFromDatabase(profile, yamlProperties);
         applicationContext.getEnvironment().getPropertySources().addLast(new MapPropertySource(PROPERTY_SOURCE_NAME, propertySource));
     }
 
-    private Map<String, Object> getPropertyMapFromDatabase(Map<?, ?> appConfigProp) {
+    private Map<String, Object> getPropertyMapFromDatabase(String profile, Map<String, String> appConfigProp) {
 
         Map<String, Object> propertySource = new HashMap<>();
         Map<String, String> allDBProperties = new HashMap<>();
 
-        final String url =  appConfigProp.get("spring.datasource.url").toString();
-        final String driverClassName = appConfigProp.get("spring.datasource.driverClassName").toString();
-        final String username = appConfigProp.get("spring.datasource.username").toString();
-        final String password = appConfigProp.get("spring.datasource.password").toString();
-        final String query = appConfigProp.get("customQuery").toString();
-        final String profile = appConfigProp.get("spring.profiles.active").toString();
+        final String url = appConfigProp.get("spring.datasource.url");
+        final String driverClassName = appConfigProp.get("spring.datasource.driverClassName");
+        final String username = appConfigProp.get("spring.datasource.username");
+        final String password = appConfigProp.get("spring.datasource.password");
+        final String query = appConfigProp.get("customQuery");
 
         // Now check for database properties
         DataSource ds = null;
@@ -85,15 +101,15 @@ public class DBPropertyLoader implements ApplicationContextInitializer<Configura
                 allDBProperties.put(propName, propValue);
             }
 
-            for(Map.Entry<?, ?> entry : appConfigProp.entrySet()){
-                String value = entry.getValue().toString();
+            for (Map.Entry<String, String> entry : appConfigProp.entrySet()) {
+                String value = entry.getValue();
                 Pattern pattern = Pattern.compile("(?<=\\$\\{).*?(?=\\})");
                 Matcher matcher = pattern.matcher(value);
 
-                if(matcher.find()) {
+                if (matcher.find()) {
                     String key = matcher.group();
-                    String val = allDBProperties.containsKey(key) ? allDBProperties.get(key): "";
-                    propertySource.put(key,val);
+                    String val = allDBProperties.getOrDefault(key, "");
+                    propertySource.put(key, val);
                 }
             }
 
